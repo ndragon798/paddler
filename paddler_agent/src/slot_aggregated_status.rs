@@ -366,7 +366,8 @@ mod tests {
 
         let snapshot = status.make_snapshot().unwrap();
 
-        assert_eq!(snapshot.tokens_per_second, 0.0);
+        let actual = snapshot.tokens_per_second;
+        assert!((actual - 0.0).abs() < 0.0001);
     }
 
     #[test]

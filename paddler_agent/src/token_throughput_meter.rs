@@ -87,7 +87,8 @@ mod tests {
     fn reports_zero_before_any_tokens_are_recorded() {
         let meter = TokenThroughputMeter::new();
 
-        assert_eq!(meter.tokens_per_second(), 0.0);
+        let actual = meter.tokens_per_second();
+        assert!((actual - 0.0).abs() < 0.0001);
     }
 
     #[test]
@@ -119,6 +120,7 @@ mod tests {
         meter.record_token();
         sleep(STALE_AFTER + Duration::from_millis(50));
 
-        assert_eq!(meter.tokens_per_second(), 0.0);
+        let actual = meter.tokens_per_second();
+        assert!((actual - 0.0).abs() < 0.0001);
     }
 }
