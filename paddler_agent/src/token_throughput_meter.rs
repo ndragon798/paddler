@@ -17,7 +17,7 @@ const STALE_AFTER: Duration = Duration::from_secs(2);
 struct ThroughputWindow {
     tokens_per_second: f64,
     window_started_at: Instant,
-    window_token_count: u64,
+    window_token_count: f64,
 }
 
 /// Tracks generated tokens for a single agent and derives a continuously
@@ -37,7 +37,7 @@ impl TokenThroughputMeter {
             window: Mutex::new(ThroughputWindow {
                 tokens_per_second: 0.0,
                 window_started_at: Instant::now(),
-                window_token_count: 0,
+                window_token_count: 0.0,
             }),
         }
     }
@@ -48,11 +48,11 @@ impl TokenThroughputMeter {
         let mut window = self.window.lock();
         let elapsed = window.window_started_at.elapsed();
 
-        window.window_token_count += 1;
+        window.window_token_count += 1.0;
 
         if elapsed >= WINDOW_DURATION {
-            window.tokens_per_second = window.window_token_count as f64 / elapsed.as_secs_f64();
-            window.window_token_count = 0;
+            window.tokens_per_second = window.window_token_count / elapsed.as_secs_f64();
+            window.window_token_count = 0.0;
             window.window_started_at = Instant::now();
         }
     }
@@ -63,7 +63,7 @@ impl TokenThroughputMeter {
     pub fn tokens_per_second(&self) -> f64 {
         let window = self.window.lock();
 
-        if window.window_started_at.elapsed() > STALE_AFTER && window.window_token_count == 0 {
+        if window.window_started_at.elapsed() > STALE_AFTER && window.window_token_count == 0.0 {
             return 0.0;
         }
 

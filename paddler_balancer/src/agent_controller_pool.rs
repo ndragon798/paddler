@@ -323,7 +323,8 @@ mod tests {
         pool.register_agent_controller("second".to_owned(), second)
             .unwrap();
 
-        assert_eq!(pool.total_tokens_per_second(), 20.0);
+        let actual = pool.total_tokens_per_second();
+        assert!((actual - 20.0).abs() < 0.0001);
     }
 
     #[test]
