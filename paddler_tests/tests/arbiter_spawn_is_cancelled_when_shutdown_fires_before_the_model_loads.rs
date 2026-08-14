@@ -51,6 +51,7 @@ async fn arbiter_spawn_is_cancelled_when_shutdown_fires_before_the_model_loads()
         applicable_state,
         None,
         1,
+        Vec::new(),
         Arc::new(ModelMetadataHolder::new()),
         Arc::new(SlotAggregatedStatusManager::new(1)),
     ) {

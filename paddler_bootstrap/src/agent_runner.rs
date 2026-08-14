@@ -13,6 +13,7 @@ use crate::service_thread::ServiceThread;
 pub struct AgentRunnerParams {
     pub agent_name: Option<String>,
     pub cancellation_token: CancellationToken,
+    pub gpu_devices: Vec<usize>,
     pub management_address: String,
     pub slots: i32,
 }
@@ -28,11 +29,12 @@ impl AgentRunner {
         AgentRunnerParams {
             agent_name,
             cancellation_token,
+            gpu_devices,
             management_address,
             slots,
         }: AgentRunnerParams,
     ) -> Self {
-        let bundle = AgentServiceBundle::new(agent_name, &management_address, slots);
+        let bundle = AgentServiceBundle::new(agent_name, &management_address, slots, gpu_devices);
         let slot_aggregated_status = bundle.slot_aggregated_status.clone();
 
         let thread = ServiceThread::spawn(cancellation_token, move |task_shutdown| {

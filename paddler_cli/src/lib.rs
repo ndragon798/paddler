@@ -5,6 +5,7 @@ use clap::Parser;
 use clap::Subcommand;
 use cmd::agent::Agent;
 use cmd::balancer::Balancer;
+use cmd::list_gpu_devices::ListGpuDevices;
 use command_handler::handler::Handler as _;
 use command_handler::shutdown_signal::register_shutdown_signals;
 #[cfg(feature = "web_admin_panel")]
@@ -34,6 +35,8 @@ enum Commands {
     Agent(Agent),
     /// Distributes incoming requests among agents
     Balancer(Box<Balancer>),
+    /// Lists the backend devices llama.cpp detects on this machine
+    ListGpuDevices(ListGpuDevices),
 }
 
 pub fn run() -> Result<()> {
@@ -50,6 +53,7 @@ pub fn run() -> Result<()> {
 
                 (*handler).handle(shutdown).await
             }
+            Some(Commands::ListGpuDevices(handler)) => handler.handle(shutdown).await,
             None => Ok(()),
         }
     })

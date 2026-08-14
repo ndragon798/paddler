@@ -377,6 +377,7 @@ impl App {
         Task::stream(iced::stream::channel(1, async move |mut output| {
             let mut runner = AgentRunner::start(AgentRunnerParams {
                 agent_name,
+                gpu_devices: Vec::new(),
                 management_address,
                 cancellation_token: cancel,
                 slots,

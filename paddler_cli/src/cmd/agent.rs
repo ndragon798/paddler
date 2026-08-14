@@ -12,6 +12,12 @@ use super::value_parser::parse_socket_addr::parse_socket_addr;
 
 #[derive(Parser)]
 pub struct Agent {
+    #[arg(long, value_delimiter = ',')]
+    /// Restrict inference to specific backend device indices (comma-separated, e.g. "0" or
+    /// "0,1"). Run `paddler list-gpu-devices` to see available indices and their names. Omit
+    /// this flag to use every detected device, as before.
+    gpu_devices: Vec<usize>,
+
     #[arg(long, value_parser = parse_socket_addr)]
     /// Address of the management server that the agent will connect to
     management_addr: ResolvedSocketAddr,
@@ -32,6 +38,7 @@ impl Handler for Agent {
             self.name.clone(),
             &self.management_addr.socket_addr.to_string(),
             self.slots,
+            self.gpu_devices,
         );
 
         let mut service_manager = ServiceManager::default();

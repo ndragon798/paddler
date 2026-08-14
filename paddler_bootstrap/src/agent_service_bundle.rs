@@ -27,7 +27,12 @@ pub struct AgentServiceBundle {
 
 impl AgentServiceBundle {
     #[must_use]
-    pub fn new(agent_name: Option<String>, management_address: &str, slots: i32) -> Self {
+    pub fn new(
+        agent_name: Option<String>,
+        management_address: &str,
+        slots: i32,
+        gpu_devices: Vec<usize>,
+    ) -> Self {
         let (agent_desired_state_tx, agent_desired_state_rx) =
             mpsc::unbounded_channel::<AgentDesiredState>();
         let (
@@ -54,6 +59,7 @@ impl AgentServiceBundle {
             continue_from_raw_prompt_request_rx,
             desired_slots_total: slots,
             generate_embedding_batch_request_rx,
+            gpu_devices,
             continuous_batch_arbiter_handle: None,
             model_metadata_holder: model_metadata_holder.clone(),
             slot_aggregated_status_manager,
