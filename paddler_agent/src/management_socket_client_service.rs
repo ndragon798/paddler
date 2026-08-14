@@ -648,6 +648,8 @@ mod tests {
         let refused_addr = probe.local_addr().unwrap();
 
         drop(probe);
+        // Give OS time to clean up socket to ensure immediate refusal.
+        tokio::time::sleep(Duration::from_millis(10)).await;
 
         let service = service_with_socket_url(format!(
             "ws://{refused_addr}/api/v1/agent_socket/test-agent"
