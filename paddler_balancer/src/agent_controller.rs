@@ -196,7 +196,7 @@ impl AgentController {
             self.set_model_path(model_path);
         }
 
-        if tokens_per_second != self.get_tokens_per_second() {
+        if (tokens_per_second - self.get_tokens_per_second()).abs() > 0.01 {
             changed = true;
 
             self.set_tokens_per_second(tokens_per_second);
