@@ -32,6 +32,7 @@ pub mod embedding_input_tokenized;
 mod from_request_params;
 pub mod generate_embedding_batch_request;
 pub mod grammar_sampler;
+pub mod list_gpu_devices;
 pub mod llamacpp_arbiter_service;
 pub mod management_socket_client_service;
 pub mod model_metadata_holder;

@@ -52,6 +52,7 @@ pub struct ContinuousBatchArbiter {
     pub agent_name: Option<String>,
     pub chat_template_override: Option<ChatTemplate>,
     pub desired_slots_total: i32,
+    pub gpu_devices: Vec<usize>,
     pub inference_parameters: InferenceParameters,
     pub multimodal_projection_path: Option<PathBuf>,
     pub model_metadata_holder: Arc<ModelMetadataHolder>,
@@ -66,6 +67,7 @@ impl ContinuousBatchArbiter {
         applicable_state: AgentApplicableState,
         agent_name: Option<String>,
         desired_slots_total: i32,
+        gpu_devices: Vec<usize>,
         model_metadata_holder: Arc<ModelMetadataHolder>,
         slot_aggregated_status_manager: Arc<SlotAggregatedStatusManager>,
     ) -> ContinuousBatchArbiterBuildOutcome {
@@ -79,6 +81,7 @@ impl ContinuousBatchArbiter {
             agent_name,
             chat_template_override: applicable_state.chat_template_override,
             desired_slots_total,
+            gpu_devices,
             inference_parameters: applicable_state.inference_parameters,
             multimodal_projection_path: applicable_state.multimodal_projection_path,
             model_metadata_holder,
@@ -108,6 +111,7 @@ impl ContinuousBatchArbiter {
 
         let agent_name_clone = self.agent_name.clone();
         let desired_slots_total = self.desired_slots_total;
+        let gpu_devices = self.gpu_devices.clone();
         let inference_parameters = self.inference_parameters.clone();
         let model_metadata_holder = self.model_metadata_holder.clone();
         let multimodal_projection_path = self.multimodal_projection_path.clone();
@@ -148,14 +152,18 @@ impl ContinuousBatchArbiter {
                         .to_llama_kv_cache_dtype(),
                 );
 
+            let mut model_params =
+                LlamaModelParams::default().with_n_gpu_layers(inference_parameters.n_gpu_layers);
+
+            if !gpu_devices.is_empty() {
+                model_params = model_params
+                    .with_devices(&gpu_devices)
+                    .context("Invalid --gpu-devices index")?;
+            }
+
             let model = Arc::new(
-                LlamaModel::load_from_file(
-                    &llama_backend,
-                    model_path.clone(),
-                    &LlamaModelParams::default()
-                        .with_n_gpu_layers(inference_parameters.n_gpu_layers),
-                )
-                .context("Unable to load model from file")?,
+                LlamaModel::load_from_file(&llama_backend, model_path.clone(), &model_params)
+                    .context("Unable to load model from file")?,
             );
 
             send_startup_signal(

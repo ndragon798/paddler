@@ -83,6 +83,7 @@ fn make_agent_runner_params(
         agent_name: Some("test-agent".to_owned()),
         management_address: management_addr.to_string(),
         cancellation_token,
+        gpu_devices: Vec::new(),
         slots: 1,
     }
 }

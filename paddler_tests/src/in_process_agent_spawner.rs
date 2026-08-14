@@ -24,6 +24,7 @@ impl AgentSpawner for InProcessAgentSpawner {
         let runner = AgentRunner::start(AgentRunnerParams {
             agent_name: Some(config.name.clone()),
             cancellation_token: CancellationToken::new(),
+            gpu_devices: Vec::new(),
             management_address: self.management_address.clone(),
             slots: config.slot_count,
         });
