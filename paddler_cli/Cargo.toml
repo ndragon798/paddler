@@ -20,6 +20,7 @@ async-trait = { workspace = true }
 clap = { workspace = true }
 command_handler = { workspace = true }
 env_logger = { workspace = true }
+log = { workspace = true }
 paddler_balancer = { workspace = true }
 paddler_bootstrap = { workspace = true }
 tokio-util = { workspace = true }

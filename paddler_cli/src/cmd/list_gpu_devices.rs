@@ -2,6 +2,7 @@ use anyhow::Result;
 use async_trait::async_trait;
 use clap::Parser;
 use command_handler::handler::Handler;
+use log::info;
 use paddler_bootstrap::list_gpu_devices::LlamaBackendDeviceType;
 use paddler_bootstrap::list_gpu_devices::list_gpu_devices;
 use tokio_util::sync::CancellationToken;
@@ -17,7 +18,7 @@ impl Handler for ListGpuDevices {
         let devices = list_gpu_devices()?;
 
         if devices.is_empty() {
-            println!("No backend devices detected.");
+            info!("No backend devices detected.");
 
             return Ok(());
         }
@@ -31,7 +32,7 @@ impl Handler for ListGpuDevices {
                 LlamaBackendDeviceType::Unknown => "unknown",
             };
 
-            println!(
+            info!(
                 "{index}: {name} ({device_type}, {backend} backend, {memory_free_mib} MiB free / {memory_total_mib} MiB total) - {description}",
                 index = device.index,
                 name = device.name,
@@ -42,7 +43,7 @@ impl Handler for ListGpuDevices {
             );
         }
 
-        println!(
+        info!(
             "\nPass one or more of the indices above to `paddler agent --gpu-devices` to restrict inference to those devices, e.g. --gpu-devices 0 or --gpu-devices 0,1."
         );
 
