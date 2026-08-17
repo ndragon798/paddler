@@ -56,6 +56,9 @@ target/release/paddler: $(PADDLER_SOURCES) esbuild-meta.json
 target/release/paddler_gui: $(PADDLER_SOURCES) esbuild-meta.json
 	cargo build --release -p paddler_gui --features web_admin_panel
 
+target/vulkan/release/paddler_gui: $(PADDLER_SOURCES) esbuild-meta.json
+	cargo build --release -p paddler_gui --features vulkan,web_admin_panel --target-dir target/vulkan
+
 target/vulkan/release/paddler: $(PADDLER_SOURCES) esbuild-meta.json
 	cargo build --release -p paddler_cli --features vulkan,web_admin_panel --target-dir target/vulkan
 

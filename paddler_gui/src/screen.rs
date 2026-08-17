@@ -8,6 +8,7 @@ use statum::transition;
 
 use crate::agent_running_data::AgentRunningData;
 use crate::detect_network_interfaces::detect_network_interfaces;
+use crate::gpu_devices::GpuDevice;
 use crate::home_data::HomeData;
 use crate::join_balancer_form_data::JoinBalancerFormData;
 use crate::running_balancer_data::RunningBalancerData;
@@ -28,8 +29,13 @@ pub struct Screen<ScreenState> {}
 
 #[transition]
 impl Screen<Home> {
-    pub fn join_balancer(self) -> Screen<JoinBalancerForm> {
-        self.transition_with(JoinBalancerFormData::default())
+    pub fn join_balancer(self, devices: &[GpuDevice]) -> Screen<JoinBalancerForm> {
+        let all_device_indices = devices.iter().map(|device| device.index).collect();
+
+        self.transition_with(JoinBalancerFormData {
+            gpu_devices: all_device_indices,
+            ..Default::default()
+        })
     }
 
     pub fn start_balancer(self) -> Screen<StartBalancerForm> {
@@ -71,6 +77,7 @@ impl Screen<JoinBalancerForm> {
             AgentRunningData {
                 balancer_address: form_data.balancer_address,
                 connected: false,
+                gpu_devices: form_data.gpu_devices,
                 snapshot: AgentControllerSnapshot {
                     desired_slots_total: 0,
                     download_current: 0,

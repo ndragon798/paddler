@@ -18,6 +18,7 @@ use iced::widget::container;
 use iced::widget::image;
 use iced::widget::image::Handle as ImageHandle;
 use iced::widget::operation;
+use iced::widget::scrollable;
 use iced::widget::stack;
 use iced::window;
 use paddler_balancer::inference_service::configuration::Configuration as InferenceServiceConfiguration;
@@ -42,6 +43,8 @@ use trzcina::ServiceShutdownOptions;
 
 use crate::agent_running_handler;
 use crate::current_screen::CurrentScreen;
+use crate::gpu_devices::GpuDevice;
+use crate::gpu_devices::detect_devices;
 use crate::home_data::HomeData;
 use crate::home_handler;
 use crate::join_balancer_form_handler;
@@ -88,6 +91,7 @@ fn shutdown_signal_stream() -> impl iced::futures::Stream<Item = Message> {
 
 pub struct App {
     agent_cancel: Option<CancellationToken>,
+    gpu_devices: Vec<GpuDevice>,
     shutdown: CancellationToken,
     balancer_cancel: Option<CancellationToken>,
     screen: CurrentScreen,
@@ -97,20 +101,27 @@ impl App {
     pub fn new() -> (Self, Task<Message>) {
         let app = Self {
             agent_cancel: None,
+            gpu_devices: Vec::new(),
             shutdown: CancellationToken::new(),
             balancer_cancel: None,
             screen: CurrentScreen::default(),
         };
 
-        (app, Task::done(Message::IcedEventLoopReady))
+        let initial_task = Task::perform(
+            async move { detect_devices() },
+            Message::GpuDevicesDetected,
+        );
+
+        (app, initial_task)
     }
 
     pub fn update(&mut self, message: Message) -> Task<Message> {
         let screen = mem::take(&mut self.screen);
 
         match (screen, message) {
-            (screen, Message::IcedEventLoopReady) => {
-                log::info!("paddler_gui: iced event loop ready");
+            (screen, Message::GpuDevicesDetected(devices)) => {
+                log::info!("paddler_gui: iced event loop ready; detected {} backend devices", devices.len());
+                self.gpu_devices = devices;
                 self.screen = screen;
 
                 Task::none()
@@ -132,7 +143,9 @@ impl App {
                         Task::none()
                     }
                     home_handler::Action::JoinBalancer => {
-                        self.screen = CurrentScreen::JoinBalancerForm(home.join_balancer());
+                        self.screen = CurrentScreen::JoinBalancerForm(home.join_balancer(
+                            &self.gpu_devices,
+                        ));
 
                         Task::none()
                     }
@@ -156,7 +169,14 @@ impl App {
                         agent_name,
                         management_address,
                         slots,
-                    } => self.spawn_agent(form.connect(), agent_name, management_address, slots),
+                        gpu_devices,
+                    } => self.spawn_agent(
+                        form.connect(),
+                        agent_name,
+                        management_address,
+                        slots,
+                        gpu_devices,
+                    ),
                 }
             }
             (CurrentScreen::StartBalancerForm(mut form), Message::StartBalancerForm(msg)) => {
@@ -330,7 +350,8 @@ impl App {
             }
             CurrentScreen::Home(screen) => view_home(&screen.state_data).map(Message::Home),
             CurrentScreen::JoinBalancerForm(screen) => {
-                view_join_balancer_form(&screen.state_data).map(Message::JoinBalancerForm)
+                view_join_balancer_form(&screen.state_data, &self.gpu_devices)
+                    .map(Message::JoinBalancerForm)
             }
             CurrentScreen::StartBalancerForm(screen) => {
                 view_start_balancer_form(&screen.state_data).map(Message::StartBalancerForm)
@@ -346,7 +367,9 @@ impl App {
             .spacing(SPACING_BASE)
             .align_x(Center);
 
-        let base_view = container(content_column).center_x(Fill).height(Fill);
+        let base_view = container(scrollable(content_column).height(Fill))
+            .center_x(Fill)
+            .height(Fill);
 
         if matches!(self.screen, CurrentScreen::Home(_)) {
             let beta_image = image(BETA_IMAGE.clone()).width(100).height(100);
@@ -369,6 +392,7 @@ impl App {
         agent_name: Option<String>,
         management_address: String,
         slots: i32,
+        gpu_devices: Vec<usize>,
     ) -> Task<Message> {
         let cancel = self.shutdown.child_token();
         self.agent_cancel = Some(cancel.clone());
@@ -377,7 +401,7 @@ impl App {
         Task::stream(iced::stream::channel(1, async move |mut output| {
             let mut runner = AgentRunner::start(AgentRunnerParams {
                 agent_name,
-                gpu_devices: Vec::new(),
+                gpu_devices,
                 management_address,
                 cancellation_token: cancel,
                 slots,

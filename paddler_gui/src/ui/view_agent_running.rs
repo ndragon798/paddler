@@ -36,6 +36,23 @@ pub fn view_agent_running(data: &AgentRunningData) -> Element<'_, Message> {
     .style(style_button_disconnect)
     .on_press(Message::Disconnect);
 
+    let devices_label = if data.gpu_devices.is_empty() {
+        "all devices".to_owned()
+    } else {
+        data.gpu_devices
+            .iter()
+            .map(usize::to_string)
+            .collect::<Vec<_>>()
+            .join(", ")
+    };
+
+    let details_content = column![
+        text("Agent details").font(BOLD),
+        view_agent_card(&data.snapshot),
+        text(format!("Inference devices: {devices_label}")).font(REGULAR),
+    ]
+    .spacing(SPACING_BASE);
+
     let connection_status = if data.connected {
         text(format!(
             "Connected to the cluster at {}",
@@ -53,8 +70,7 @@ pub fn view_agent_running(data: &AgentRunningData) -> Element<'_, Message> {
 
     column![
         container(text("Your agent").size(FONT_SIZE_L2).font(BOLD)).padding([0.0, SPACING_BASE]),
-        container(text("Agent details").font(BOLD)).padding([0.0, SPACING_BASE]),
-        view_agent_card(&data.snapshot),
+        details_content,
         status_row,
     ]
     .spacing(SPACING_2X)

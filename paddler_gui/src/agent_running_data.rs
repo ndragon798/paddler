@@ -4,6 +4,8 @@ use paddler_messaging::slot_aggregated_status_snapshot::SlotAggregatedStatusSnap
 pub struct AgentRunningData {
     pub balancer_address: String,
     pub connected: bool,
+    /// Indices of the devices the agent is restricted to (empty means every detected device)
+    pub gpu_devices: Vec<usize>,
     pub snapshot: AgentControllerSnapshot,
 }
 

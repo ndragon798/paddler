@@ -3,6 +3,7 @@ mod agent_running_handler;
 mod app;
 mod current_screen;
 mod detect_network_interfaces;
+mod gpu_devices;
 mod home_data;
 mod home_handler;
 mod join_balancer_form_data;

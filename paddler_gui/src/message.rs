@@ -1,4 +1,5 @@
 use crate::agent_running_handler;
+use crate::gpu_devices::GpuDevice;
 use crate::home_handler;
 use crate::join_balancer_form_handler;
 use crate::running_balancer_handler;
@@ -16,7 +17,7 @@ pub enum Message {
     BalancerFailed(String),
     AgentStopped,
     AgentFailed(String),
-    IcedEventLoopReady,
+    GpuDevicesDetected(Vec<GpuDevice>),
     Quit,
     TabPressed { shift: bool },
 }

@@ -7,6 +7,7 @@ pub enum Message {
     SetAgentName(String),
     SetBalancerAddress(String),
     SetSlotsCount(String),
+    ToggleGpuDevice { index: usize, is_selected: bool },
     Connect,
     Cancel,
 }
@@ -18,6 +19,7 @@ pub enum Action {
         agent_name: Option<String>,
         management_address: String,
         slots: i32,
+        gpu_devices: Vec<usize>,
     },
 }
 
@@ -43,6 +45,21 @@ impl JoinBalancerFormData {
 
                 Action::None
             }
+            Message::ToggleGpuDevice { index, is_selected } => {
+                if is_selected {
+                    self.gpu_devices.push(index);
+                    self.gpu_devices.sort_unstable();
+                } else if let Some(position) = self
+                    .gpu_devices
+                    .iter()
+                    .position(|device| *device == index)
+                {
+                    self.gpu_devices.remove(position);
+                }
+                self.gpu_devices_error = None;
+
+                Action::None
+            }
             Message::Connect => self.validate_and_connect(),
             Message::Cancel => Action::Cancel,
         }
@@ -51,6 +68,7 @@ impl JoinBalancerFormData {
     fn validate_and_connect(&mut self) -> Action {
         self.balancer_address_error = None;
         self.slots_error = None;
+        self.gpu_devices_error = None;
 
         if self.balancer_address.is_empty() {
             self.balancer_address_error = Some("Cluster address is required.".to_owned());
@@ -87,7 +105,14 @@ impl JoinBalancerFormData {
             }
         };
 
-        if self.balancer_address_error.is_some() || self.slots_error.is_some() {
+        if self.gpu_devices.is_empty() {
+            self.gpu_devices_error = Some("Select at least one device.".to_owned());
+        }
+
+        if self.balancer_address_error.is_some()
+            || self.slots_error.is_some()
+            || self.gpu_devices_error.is_some()
+        {
             return Action::None;
         }
 
@@ -105,6 +130,7 @@ impl JoinBalancerFormData {
             agent_name,
             management_address: self.balancer_address.clone(),
             slots,
+            gpu_devices: self.gpu_devices.clone(),
         }
     }
 }
